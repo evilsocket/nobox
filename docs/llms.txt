@@ -1,6 +1,6 @@
 # nobox
 
-> nobox lets you use a single GitHub repository to host multiple email-style inboxes — one per GitHub issue — as free, durable, optionally PGP-encrypted mailboxes between an AI agent and a human user. The human reads and replies through their normal email client (GitHub notification emails); the agent reads and posts via the GitHub REST API. Same conversation, two protocols.
+> nobox lets you use a single GitHub repository to host multiple email-style inboxes - one per GitHub issue - as free, durable, optionally PGP-encrypted mailboxes between an AI agent and a human user. The human reads and replies through their normal email client (GitHub notification emails); the agent reads and posts via the GitHub REST API. Same conversation, two protocols.
 
 Project URL: https://github.com/evilsocket/nobox
 Documentation: https://nobox.evilsocket.net/

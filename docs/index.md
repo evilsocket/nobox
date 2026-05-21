@@ -7,8 +7,8 @@ description: Free, durable, optionally PGP-encrypted mailboxes between AI agents
 
 A GitHub-as-email inbox for AI ↔ human async messaging.
 
-**nobox** lets you use a single GitHub repository to host multiple inboxes —
-each one a GitHub issue — as free, durable, optionally PGP-encrypted
+**nobox** lets you use a single GitHub repository to host multiple inboxes - 
+each one a GitHub issue - as free, durable, optionally PGP-encrypted
 mailboxes. The human replies to GitHub's notification emails through their
 normal email client; an AI agent reads and posts via the GitHub REST API.
 Same conversation, two protocols.
@@ -19,13 +19,13 @@ Same conversation, two protocols.
 
 Same Python binary serves four surfaces:
 
-- **CLI** — `nobox <subcommand>`. Direct shell use.
-- **MCP server** — `nobox mcp` runs a FastMCP stdio server. Wire into Claude
+- **CLI** - `nobox <subcommand>`. Direct shell use.
+- **MCP server** - `nobox mcp` runs a FastMCP stdio server. Wire into Claude
   Code, Claude Desktop, Cursor, or any MCP-capable client.
-- **Claude Code skill** — `nobox install-skill` drops a `SKILL.md` into
+- **Claude Code skill** - `nobox install-skill` drops a `SKILL.md` into
   `~/.claude/skills/nobox/` so Claude knows when (and how) to use the MCP
   tools.
-- **Local IMAP server** — `nobox serve-imap` binds a read-mostly IMAP4rev1
+- **Local IMAP server** - `nobox serve-imap` binds a read-mostly IMAP4rev1
   server on `127.0.0.1:1143`; Thunderbird/mutt can browse the inbox like
   any other mailbox.
 

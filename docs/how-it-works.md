@@ -1,5 +1,5 @@
 ---
-title: How it works — reverse-engineering GitHub's reply-by-email token
+title: How it works - reverse-engineering GitHub's reply-by-email token
 description: Field-by-field breakdown of GitHub's reply+<TOKEN>@reply.github.com address. Base32-encoded uid + MAC + thread_id + msgpack tail; the legacy hex variant; the SMTP no-validation behavior; the security implications.
 ---
 
@@ -15,30 +15,30 @@ agent side.
 ## The token isn't opaque
 
 > **⚠ Never share a `reply+<TOKEN>@reply.github.com` address with anyone.
-> Each token is effectively a scoped bearer credential — it lets whoever
+> Each token is effectively a scoped bearer credential - it lets whoever
 > holds it post a comment _as you_, on that specific issue, simply by
 > SMTPing a reply. The MAC stops forgery, but if the token itself leaks
 > (forwarded email, screenshot, paste into a chat), the holder can
 > impersonate you on that thread. The only way to revoke an outstanding
-> reply token is to change your GitHub password — that rotates the keying
+> reply token is to change your GitHub password - that rotates the keying
 > material and invalidates every still-live token at once.**
 
-`<TOKEN>` is a structured binary blob — base32-encoded without padding,
-26–30 bytes on the wire. (The old hex variant was twice as long and was
+`<TOKEN>` is a structured binary blob - base32-encoded without padding,
+26 - 30 bytes on the wire. (The old hex variant was twice as long and was
 compressed to base32 around 2022.)
 
 ```
 uid(4) || mac(10) || thread_id(4) || msgpack([kind, subject_id])
 ```
 
-### `uid` — 4 bytes, big-endian uint32, **in the clear**
+### `uid` - 4 bytes, big-endian uint32, **in the clear**
 
 Recipient's GitHub user ID. The first 7 base32 chars of any token
-directly identify the recipient — no API call needed. Leaked notification
+directly identify the recipient - no API call needed. Leaked notification
 emails are therefore trivially attributable to a specific GitHub user via
 `github.com/<username>.png` reverse-mapping.
 
-### `mac` — 10 bytes / 80-bit authenticator
+### `mac` - 10 bytes / 80-bit authenticator
 
 Empirically depends on `uid`, `thread_id`, and almost certainly the
 `(kind, subject_id)` tuple as well. Different recipients of the same
@@ -47,19 +47,19 @@ subject get different MACs. No field can be mutated without invalidating
 it.
 
 **The keying material rotates on GitHub password reset.** Old reply
-tokens stop working once you change your password — that's the only
+tokens stop working once you change your password - that's the only
 externally-visible revocation path.
 
-### `thread_id` — 4 bytes, big-endian uint32
+### `thread_id` - 4 bytes, big-endian uint32
 
 A global notification-delivery counter. Shared across all recipients of
 one notification event, unique per delivery (same user receiving two
 notifications about the same subject gets two different `thread_id`s).
 
 Currently in the 1.78B range and growing ~1B every six months. GitHub
-will need to migrate the field before it hits 2³² in roughly two years.
+will need to migrate the field before it hits 2^32 in roughly two years.
 
-### `msgpack` tail — 2-element array `[kind, subject_id]`
+### `msgpack` tail - 2-element array `[kind, subject_id]`
 
 `kind` is a single ASCII char identifying the subject type:
 
@@ -73,8 +73,8 @@ will need to migrate the field before it hits 2³² in roughly two years.
 | `'r'` | Release | Inferred |
 
 `subject_id` is GitHub's global database ID for the subject (not the
-per-repo `#N`) — encoded with msgpack's int-tag autosizing:
-`ce` + 4 bytes for `uint32` (below 2³²), `cf` + 8 bytes for `uint64`
+per-repo `#N`) - encoded with msgpack's int-tag autosizing:
+`ce` + 4 bytes for `uint32` (below 2^32), `cf` + 8 bytes for `uint64`
 above.
 
 **The token has no repo field.** GitHub recovers the repo server-side by
@@ -106,12 +106,12 @@ valid:
 - Any sender.
 - Any token mutation.
 - Even arbitrary local-part prefixes (`notifications+`, `noreply+`,
-  `postmaster`, …).
+  `postmaster`, ...).
 
 All real token validation happens **post-DATA inside metroplex**, which
 means:
 
-- **No liveness oracle** via SMTP probing — you cannot distinguish a
+- **No liveness oracle** via SMTP probing - you cannot distinguish a
   valid token from an invalid one at the protocol level.
 - **The MAC is the only thing stopping forgery.**
 - `uid` being plaintext in the prefix means leaked notification emails
@@ -122,7 +122,7 @@ means:
 
 nobox itself does not decode the token. It only needs the GitHub REST
 API on the agent side and the user's regular reply-to-email behaviour on
-the human side. The token research is *why we know this works* — it
+the human side. The token research is *why we know this works* - it
 proves the design isn't fragile and isn't relying on undocumented
 internals being friendly. The reply pipeline has been stable since 2011
 (the year the feature shipped), with the only externally visible change

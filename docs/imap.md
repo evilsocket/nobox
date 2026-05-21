@@ -7,8 +7,8 @@ description: nobox serve-imap runs a loopback IMAP4rev1 bridge on 127.0.0.1:1143
 
 `nobox serve-imap` runs an IMAP4rev1 server on the loopback interface that
 translates IMAP operations into GitHub REST calls. Point any mail client at
-it (Thunderbird, Apple Mail, mutt, neomutt, …) and use a nobox inbox as a
-regular mailbox — including **composing replies** that get posted to GitHub
+it (Thunderbird, Apple Mail, mutt, neomutt, ...) and use a nobox inbox as a
+regular mailbox - including **composing replies** that get posted to GitHub
 as real comments.
 
 Requires the `[imap]` install extra (Twisted).
@@ -20,7 +20,7 @@ nobox serve-imap [--host 127.0.0.1] [--port 1143]
 ```
 
 The server **refuses to bind to anything other than the loopback
-interface** by design — there's no TLS, and the IMAP password is
+interface** by design - there's no TLS, and the IMAP password is
 generated per inbox at create time. Loopback-only keeps that acceptable.
 
 ## Mailbox structure
@@ -57,7 +57,7 @@ long as the backing issue exists.
 | `NOOP` / `CHECK` / `CLOSE` / `LOGOUT` / `EXPUNGE` | ✓ |
 | `COPY` / `MOVE` | ✗ (use `STORE +FLAGS \Deleted` + `EXPUNGE` to delete) |
 
-### APPEND to Sent — composing replies from your mail client
+### APPEND to Sent - composing replies from your mail client
 
 When you reply to or compose a message in a mail client that's set up to
 "save sent messages on the server" (the default for Thunderbird with an
@@ -66,12 +66,12 @@ IMAP+SMTP account), the client appends the outgoing RFC822 message to the
 "send this":
 
 1. The RFC822 bytes are parsed; the text/plain body is extracted (or
-   text/html stripped if there's no plaintext alternative).
+  text/html stripped if there's no plaintext alternative).
 2. The `In-Reply-To` / `References` header is matched against nobox's
-   synthesised `<comment-{id}@nobox.local>` Message-ID format; if a hit,
-   the post is threaded under that comment.
+  synthesised `<comment-{id}@nobox.local>` Message-ID format; if a hit,
+  the post is threaded under that comment.
 3. The body is posted via the GitHub REST API exactly as if you'd run
-   `nobox send`.
+  `nobox send`.
 
 Result: replies in Thunderbird Just Work. PGP encryption (if the inbox
 has it enabled) is applied transparently before posting.
@@ -81,7 +81,7 @@ has it enabled) is applied transparently before posting.
 > to use "IMAP for outgoing mail" mode, or set up a stub SMTP server
 > that does nothing (some clients accept this).
 
-### IDLE — push notifications
+### IDLE - push notifications
 
 When a connected client issues `IDLE`, nobox attaches a background
 `LoopingCall` that polls GitHub every 60s. When new comments land in the
@@ -89,9 +89,9 @@ backing issue:
 
 1. The poller persists them to SQLite (same path as `nobox read-inbox`).
 2. If the message count grew, `IMAP4Server.newMessages(exists, recent)`
-   fires, which sends an untagged `EXISTS` response to the client.
+  fires, which sends an untagged `EXISTS` response to the client.
 3. The client wakes up, can `DONE` the IDLE, fetch the new mail, and
-   re-enter IDLE.
+  re-enter IDLE.
 
 `STORE` operations also notify all attached clients via `flagsChanged`,
 so two clients connected to the same inbox stay in sync on read/unread
@@ -125,11 +125,11 @@ threading on the GitHub side.
 5. Username: your inbox name (e.g. `daily`).
 6. Password: `cat ~/.local/state/nobox/inboxes/daily/imap.password`.
 7. For Sent-from-IMAP behaviour, configure outgoing mail to use the same
-   account and check **"Save sent messages on the server"** under the
-   account settings. SMTP can be set to anything (or a dummy server);
-   nobox handles the actual posting via the IMAP APPEND.
+  account and check **"Save sent messages on the server"** under the
+  account settings. SMTP can be set to anything (or a dummy server);
+  nobox handles the actual posting via the IMAP APPEND.
 
-Thunderbird may complain about the unencrypted connection — confirm
+Thunderbird may complain about the unencrypted connection - confirm
 that's fine since the traffic never leaves your machine.
 
 ## mutt setup

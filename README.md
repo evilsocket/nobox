@@ -8,6 +8,10 @@ mailboxes. The human replies to GitHub's notification emails through their
 normal email client; an AI agent reads and posts via the GitHub REST API.
 Same conversation, two protocols.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/evilsocket/nobox/refs/heads/main/docs/diagram.png" alt="nobox architecture diagram" width="720">
+</p>
+
 ## Quick start
 
 ```bash

@@ -17,7 +17,7 @@ shipped to the model when the tools are loaded, plus per-tool docstrings.
 claude mcp add --transport stdio nobox -- nobox mcp
 ```
 
-That's it — Claude Code will spawn `nobox mcp` as a subprocess when needed,
+That's it - Claude Code will spawn `nobox mcp` as a subprocess when needed,
 read the server-level instructions, and expose the tools to the model.
 
 ### Claude Desktop, Cursor, others
@@ -27,10 +27,10 @@ argument. Example (Claude Desktop `mcpServers` block):
 
 ```json
 {
-  "nobox": {
-    "command": "nobox",
-    "args": ["mcp"]
-  }
+ "nobox": {
+ "command": "nobox",
+ "args": ["mcp"]
+ }
 }
 ```
 
@@ -43,11 +43,11 @@ argument. Example (Claude Desktop `mcpServers` block):
 | `read_message(name, comment_id, raw=false)` | Full body of a single message. Marks it `\Seen`. |
 | `send_message(name, body, in_reply_to=null)` | Post a new comment; user gets the notification email. |
 | `mark_read(name, comment_id)` / `mark_unread(...)` | Toggle the local `\Seen` flag. |
-| `create_inbox(name, repo, pgp=false, ...)` | ⚠ Destructive — never call without explicit user instruction. |
-| `delete_inbox(name, local_only=false)` | ⚠ Destructive — full wipe (issue + local) by default. |
+| `create_inbox(name, repo, pgp=false, ...)` | ⚠ Destructive - never call without explicit user instruction. |
+| `delete_inbox(name, local_only=false)` | ⚠ Destructive - full wipe (issue + local) by default. |
 | `doctor(name=null)` | Diagnostic; posts a sentinel comment that the poller filters out. |
 
-`read_inbox` returns previews only on purpose — calling `read_message` for
+`read_inbox` returns previews only on purpose - calling `read_message` for
 every item would dump full bodies into the agent's context every poll
 cycle. The agent should `read_inbox` first, decide which messages matter,
 then `read_message` only those.
@@ -72,8 +72,8 @@ The MCP `instructions` block tells the agent to ask the user **once**:
 > Want me to set up a recurring check of your nobox inbox every 10 minutes
 > so I can respond to your replies without you having to nudge me?
 
-…and to create the schedule only after explicit user approval. Recommended
-interval is **10 minutes** — fast enough to feel responsive over email,
+...and to create the schedule only after explicit user approval. Recommended
+interval is **10 minutes** - fast enough to feel responsive over email,
 slow enough to stay well within GitHub's 5000 req/hour rate limit even
 across many inboxes.
 
@@ -88,13 +88,13 @@ All tools return JSON-serialisable dicts. `read_inbox` returns a list of:
 
 ```json
 {
-  "comment_id": 4508692935,
-  "from": "evilsocket",
-  "ts": "2026-05-21T13:24:18Z",
-  "subject": "Re: eddy",
-  "flags": [],
-  "direction": "in",
-  "preview": "hello, can you read me?…"
+ "comment_id": 4508692935,
+ "from": "evilsocket",
+ "ts": "2026-05-21T13:24:18Z",
+ "subject": "Re: eddy",
+ "flags": [],
+ "direction": "in",
+ "preview": "hello, can you read me?..."
 }
 ```
 

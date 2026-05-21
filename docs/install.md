@@ -23,7 +23,7 @@ nobox is not on PyPI. Install it straight from the GitHub repo with `uv` or
     ```
 
 This puts a `nobox` executable in `~/.local/bin/` (uv) or your pipx bin
-directory. Make sure that's on your `$PATH` — `uv tool update-shell` will
+directory. Make sure that's on your `$PATH` - `uv tool update-shell` will
 patch your shell rc if it isn't.
 
 ## With extras
@@ -64,7 +64,7 @@ The easiest setup is the `gh` CLI:
 gh auth login --scopes 'repo'
 ```
 
-After this, nobox can pick up your token automatically — no environment
+After this, nobox can pick up your token automatically - no environment
 variables needed.
 
 ## Verifying the install
@@ -85,12 +85,12 @@ self-action. Without this fix the loop silently breaks:
 
 1. Visit <https://github.com/settings/notifications>
 2. Under **Email notification preferences**, enable
-   **"Include your own updates"**.
+ **"Include your own updates"**.
 3. Run `nobox doctor --name <your-inbox>` to confirm the sentinel email
-   arrives.
+ arrives.
 
 If you'd rather not flip the global toggle, authenticate nobox with a
-separate "bot" GitHub account instead — a different actor bypasses the
+separate "bot" GitHub account instead - a different actor bypasses the
 self-action suppression entirely.
 
 ## Uninstall

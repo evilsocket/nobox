@@ -33,7 +33,7 @@ discoverable. You can also invoke it explicitly with `/nobox`.
 
 The skill description triggers auto-invocation when the user asks for
 async / leave-a-note / email-style follow-up patterns ("ping me when
-done", "leave me a message", "check my inbox", "email me a summary"…).
+done", "leave me a message", "check my inbox", "email me a summary"...).
 
 The body covers:
 
@@ -46,7 +46,7 @@ The body covers:
   `read_message` for actionable items → `send_message` with `in_reply_to`.
 - **Polling pattern**: if the runtime supports recurring tasks
   (`/schedule`, `/loop`, cron, etc.), Claude should propose a 10-minute
-  recurring check **and only set it up after the user agrees** — never
+  recurring check **and only set it up after the user agrees** - never
   silently.
 - **Safety**: `create_inbox` and `delete_inbox` are destructive; never
   call them without explicit user instruction.

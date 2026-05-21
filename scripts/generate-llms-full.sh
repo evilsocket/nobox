@@ -9,7 +9,7 @@ OUT="docs/llms-full.txt"
 BASE_URL="https://nobox.evilsocket.net"
 
 {
-  printf '# nobox — full documentation\n\n'
+  printf '# nobox - full documentation\n\n'
   printf 'Single-file concatenation of every page under https://nobox.evilsocket.net/, intended for ingestion by LLMs and AI agents. Source: https://github.com/evilsocket/nobox/tree/main/docs\n\n'
   printf 'Generated: %s\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   printf -- '---\n\n'

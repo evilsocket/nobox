@@ -22,13 +22,13 @@ After that, encryption is transparent on both sides.
 
 ```bash
 nobox create-inbox \
-  --repo OWNER/REPO \
-  --name secure \
-  --pgp \
-  --user-pgp-key ~/.gnupg/me.pub.asc
+ --repo OWNER/REPO \
+ --name secure \
+ --pgp \
+ --user-pgp-key ~/.gnupg/me.pub.asc
 ```
 
-`--user-pgp-key` points at your armored PGP public key — that's the key
+`--user-pgp-key` points at your armored PGP public key - that's the key
 nobox encrypts outgoing comments to. Export it once with `gpg --armor
 --export <your-fingerprint> > ~/.gnupg/me.pub.asc` if you don't have it
 already.
@@ -39,9 +39,9 @@ When the agent calls `send_message`:
 
 1. The body is plaintext markdown.
 2. nobox encrypts it to **your public key** and signs with the **inbox
-   private key**.
+  private key**.
 3. The ASCII-armored ciphertext goes into a fenced `text` code block.
-4. nobox appends its usual `<!-- nobox-meta {…, "pgp":true} -->` tag.
+4. nobox appends its usual `<!-- nobox-meta {..., "pgp":true} -->` tag.
 5. The whole thing is posted as a GitHub issue comment.
 
 GitHub emails you a notification containing the armored block. You
@@ -55,7 +55,7 @@ When the agent calls `read_message` (or any `read_inbox` with `decrypt=True`):
 2. It looks for an ASCII-armored `-----BEGIN PGP MESSAGE-----` block.
 3. If present, it decrypts with the **inbox private key**.
 4. If a signer key is configured, it verifies the signature (failure is
-   non-fatal; the plaintext is still returned with a warning).
+  non-fatal; the plaintext is still returned with a warning).
 5. The returned `body` field is plaintext.
 
 `raw=true` always returns the untouched original (still encrypted), useful
@@ -65,12 +65,12 @@ for debugging.
 
 For incoming replies, the user is expected to encrypt to the inbox's
 public key in their own email client (Enigmail, GPGSuite, Mailvelope,
-etc.). The inbox public key is in the issue body for convenience — your
+etc.). The inbox public key is in the issue body for convenience - your
 email client may auto-discover it via `gpg --import` from the page, or you
 can paste it manually.
 
 If you reply without encrypting, nobox still ingests the comment but
-won't be able to decrypt anything — the body field will be plaintext as
+won't be able to decrypt anything - the body field will be plaintext as
 posted.
 
 ## Key rotation
@@ -78,7 +78,7 @@ posted.
 There's no built-in rotation command yet. To rotate:
 
 1. `nobox delete-inbox --name X` (full wipe).
-2. `nobox create-inbox --name X --pgp --user-pgp-key …` again.
+2. `nobox create-inbox --name X --pgp --user-pgp-key ...` again.
 
 A new inbox keypair is generated; the old private key file under
 `$XDG_STATE_HOME/nobox/inboxes/X/` is removed as part of the delete.
@@ -95,7 +95,7 @@ A new inbox keypair is generated; the old private key file under
   comments as you, but they can't read the encrypted ciphertext you
   received because they don't have your PGP private key.
 - The MAC keying material in GitHub reply tokens rotates on **GitHub
-  password reset**. The PGP keypair is **independent** of that — rotating
+  password reset**. The PGP keypair is **independent** of that - rotating
   your GitHub password does not invalidate the PGP keys, and vice versa.
 
 ## CLI behaviour with PGP

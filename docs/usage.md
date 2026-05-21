@@ -6,7 +6,7 @@ description: Every nobox subcommand and option. create-inbox, read-inbox, read-m
 # CLI usage
 
 `nobox <subcommand> [options]`. The default behaviour when there is exactly
-one inbox configured is to use it automatically — you can omit `--name` in
+one inbox configured is to use it automatically - you can omit `--name` in
 every subcommand that takes it. With multiple inboxes, either pass `--name`
 explicitly or set `default_inbox = "X"` in `~/.config/nobox/config.toml`.
 
@@ -36,10 +36,10 @@ Create a new inbox backed by a GitHub issue on a repo you own.
 
 ```bash
 nobox create-inbox \
-  --repo OWNER/REPO \
-  --name <local-name> \
-  [--pgp --user-pgp-key PATH] \
-  [--no-pop]
+ --repo OWNER/REPO \
+ --name <local-name> \
+ [--pgp --user-pgp-key PATH] \
+ [--no-pop]
 ```
 
 | Option | Default | Meaning |
@@ -47,12 +47,12 @@ nobox create-inbox \
 | `--repo` | required | `OWNER/REPO` of a repo you own with issues enabled. |
 | `--name` | required | Local identifier. Becomes the GitHub issue title (so notification emails read `[OWNER/REPO] <name> (Issue #N)`). |
 | `--pgp` | off | Generate an inbox PGP keypair and encrypt traffic. Requires `--user-pgp-key`. |
-| `--user-pgp-key PATH` | — | Path to your armored public key file. |
+| `--user-pgp-key PATH` | - | Path to your armored public key file. |
 | `--no-pop` | pop on | Disable POP3-style behaviour: comments stay on GitHub after they're persisted locally. |
 
 The issue body is seeded with the nobox logo + a short intro telling the
 user how to talk to the agent (reply to email notifications). A
-`<!-- nobox-inbox v=1 … -->` marker is appended so the issue can be
+`<!-- nobox-inbox v=1 ... -->` marker is appended so the issue can be
 recognised later.
 
 ## `list-inboxes`
@@ -61,7 +61,7 @@ recognised later.
 nobox list-inboxes [--json]
 ```
 
-Prints one row per inbox (`name`, `kind=issue`, `repo`, `pgp=…`).
+Prints one row per inbox (`name`, `kind=issue`, `repo`, `pgp=...`).
 
 ## `delete-inbox`
 
@@ -93,7 +93,7 @@ the local archive.
 |--------|---------|---------|
 | `--unread-only` | off | Skip messages already marked `\Seen`. |
 | `--limit N` | 20 | Cap the number of rows returned. |
-| `--since ISO` | — | Only messages newer than this ISO-8601 timestamp. |
+| `--since ISO` | - | Only messages newer than this ISO-8601 timestamp. |
 | `--json` | off | Emit a JSON array (banner suppressed). |
 
 Doctor-sentinel comments are filtered automatically.
@@ -116,7 +116,7 @@ nobox send --name X --body "..." [--in-reply-to COMMENT_ID] [--json]
 
 Posts a new comment on the inbox issue. The user gets a GitHub
 notification email. `--in-reply-to` threads the message under a specific
-incoming message — the human's email client renders the thread coherently.
+incoming message - the human's email client renders the thread coherently.
 
 If the inbox has PGP enabled, the body is encrypted to the user's public
 key transparently.
@@ -132,11 +132,11 @@ Shorthand for `send --in-reply-to COMMENT_ID`.
 ## `mark-read` / `mark-unread` { #mark-read-mark-unread }
 
 ```bash
-nobox mark-read   --name X --id COMMENT_ID
+nobox mark-read --name X --id COMMENT_ID
 nobox mark-unread --name X --id COMMENT_ID
 ```
 
-Manages the local `\Seen` flag. Doesn't touch GitHub. Rare in normal flow —
+Manages the local `\Seen` flag. Doesn't touch GitHub. Rare in normal flow - 
 `read-message` already marks `\Seen`.
 
 ## `delete`
@@ -154,8 +154,8 @@ comment (use `delete-inbox --remote` if you want full remote cleanup).
 nobox doctor [--name X] [--json]
 ```
 
-Runs preflight checks (auth, rate limit, `has_issues`, issue state) and —
-if `--name` is given — posts a `**nobox doctor sentinel**` comment so you
+Runs preflight checks (auth, rate limit, `has_issues`, issue state) and - 
+if `--name` is given - posts a `**nobox doctor sentinel**` comment so you
 can confirm the email loop works end-to-end. The sentinel is tagged with a
 `kind:"sentinel"` meta block so the poller drops it on ingest, never to be
 seen by your agent.

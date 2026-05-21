@@ -1,8 +1,8 @@
-# nobox — full documentation
+# nobox - full documentation
 
 Single-file concatenation of every page under https://nobox.evilsocket.net/, intended for ingestion by LLMs and AI agents. Source: https://github.com/evilsocket/nobox/tree/main/docs
 
-Generated: 2026-05-21T15:44:39Z
+Generated: 2026-05-21T16:40:33Z
 
 ---
 
@@ -19,8 +19,8 @@ description: Free, durable, optionally PGP-encrypted mailboxes between AI agents
 
 A GitHub-as-email inbox for AI ↔ human async messaging.
 
-**nobox** lets you use a single GitHub repository to host multiple inboxes —
-each one a GitHub issue — as free, durable, optionally PGP-encrypted
+**nobox** lets you use a single GitHub repository to host multiple inboxes - 
+each one a GitHub issue - as free, durable, optionally PGP-encrypted
 mailboxes. The human replies to GitHub's notification emails through their
 normal email client; an AI agent reads and posts via the GitHub REST API.
 Same conversation, two protocols.
@@ -31,13 +31,13 @@ Same conversation, two protocols.
 
 Same Python binary serves four surfaces:
 
-- **CLI** — `nobox <subcommand>`. Direct shell use.
-- **MCP server** — `nobox mcp` runs a FastMCP stdio server. Wire into Claude
+- **CLI** - `nobox <subcommand>`. Direct shell use.
+- **MCP server** - `nobox mcp` runs a FastMCP stdio server. Wire into Claude
   Code, Claude Desktop, Cursor, or any MCP-capable client.
-- **Claude Code skill** — `nobox install-skill` drops a `SKILL.md` into
+- **Claude Code skill** - `nobox install-skill` drops a `SKILL.md` into
   `~/.claude/skills/nobox/` so Claude knows when (and how) to use the MCP
   tools.
-- **Local IMAP server** — `nobox serve-imap` binds a read-mostly IMAP4rev1
+- **Local IMAP server** - `nobox serve-imap` binds a read-mostly IMAP4rev1
   server on `127.0.0.1:1143`; Thunderbird/mutt can browse the inbox like
   any other mailbox.
 
@@ -101,7 +101,7 @@ nobox is not on PyPI. Install it straight from the GitHub repo with `uv` or
     ```
 
 This puts a `nobox` executable in `~/.local/bin/` (uv) or your pipx bin
-directory. Make sure that's on your `$PATH` — `uv tool update-shell` will
+directory. Make sure that's on your `$PATH` - `uv tool update-shell` will
 patch your shell rc if it isn't.
 
 ## With extras
@@ -142,7 +142,7 @@ The easiest setup is the `gh` CLI:
 gh auth login --scopes 'repo'
 ```
 
-After this, nobox can pick up your token automatically — no environment
+After this, nobox can pick up your token automatically - no environment
 variables needed.
 
 ## Verifying the install
@@ -163,12 +163,12 @@ self-action. Without this fix the loop silently breaks:
 
 1. Visit <https://github.com/settings/notifications>
 2. Under **Email notification preferences**, enable
-   **"Include your own updates"**.
+ **"Include your own updates"**.
 3. Run `nobox doctor --name <your-inbox>` to confirm the sentinel email
-   arrives.
+ arrives.
 
 If you'd rather not flip the global toggle, authenticate nobox with a
-separate "bot" GitHub account instead — a different actor bypasses the
+separate "bot" GitHub account instead - a different actor bypasses the
 self-action suppression entirely.
 
 ## Uninstall
@@ -197,7 +197,7 @@ description: Every nobox subcommand and option. create-inbox, read-inbox, read-m
 # CLI usage
 
 `nobox <subcommand> [options]`. The default behaviour when there is exactly
-one inbox configured is to use it automatically — you can omit `--name` in
+one inbox configured is to use it automatically - you can omit `--name` in
 every subcommand that takes it. With multiple inboxes, either pass `--name`
 explicitly or set `default_inbox = "X"` in `~/.config/nobox/config.toml`.
 
@@ -227,10 +227,10 @@ Create a new inbox backed by a GitHub issue on a repo you own.
 
 ```bash
 nobox create-inbox \
-  --repo OWNER/REPO \
-  --name <local-name> \
-  [--pgp --user-pgp-key PATH] \
-  [--no-pop]
+ --repo OWNER/REPO \
+ --name <local-name> \
+ [--pgp --user-pgp-key PATH] \
+ [--no-pop]
 ```
 
 | Option | Default | Meaning |
@@ -238,12 +238,12 @@ nobox create-inbox \
 | `--repo` | required | `OWNER/REPO` of a repo you own with issues enabled. |
 | `--name` | required | Local identifier. Becomes the GitHub issue title (so notification emails read `[OWNER/REPO] <name> (Issue #N)`). |
 | `--pgp` | off | Generate an inbox PGP keypair and encrypt traffic. Requires `--user-pgp-key`. |
-| `--user-pgp-key PATH` | — | Path to your armored public key file. |
+| `--user-pgp-key PATH` | - | Path to your armored public key file. |
 | `--no-pop` | pop on | Disable POP3-style behaviour: comments stay on GitHub after they're persisted locally. |
 
 The issue body is seeded with the nobox logo + a short intro telling the
 user how to talk to the agent (reply to email notifications). A
-`<!-- nobox-inbox v=1 … -->` marker is appended so the issue can be
+`<!-- nobox-inbox v=1 ... -->` marker is appended so the issue can be
 recognised later.
 
 ## `list-inboxes`
@@ -252,7 +252,7 @@ recognised later.
 nobox list-inboxes [--json]
 ```
 
-Prints one row per inbox (`name`, `kind=issue`, `repo`, `pgp=…`).
+Prints one row per inbox (`name`, `kind=issue`, `repo`, `pgp=...`).
 
 ## `delete-inbox`
 
@@ -284,7 +284,7 @@ the local archive.
 |--------|---------|---------|
 | `--unread-only` | off | Skip messages already marked `\Seen`. |
 | `--limit N` | 20 | Cap the number of rows returned. |
-| `--since ISO` | — | Only messages newer than this ISO-8601 timestamp. |
+| `--since ISO` | - | Only messages newer than this ISO-8601 timestamp. |
 | `--json` | off | Emit a JSON array (banner suppressed). |
 
 Doctor-sentinel comments are filtered automatically.
@@ -307,7 +307,7 @@ nobox send --name X --body "..." [--in-reply-to COMMENT_ID] [--json]
 
 Posts a new comment on the inbox issue. The user gets a GitHub
 notification email. `--in-reply-to` threads the message under a specific
-incoming message — the human's email client renders the thread coherently.
+incoming message - the human's email client renders the thread coherently.
 
 If the inbox has PGP enabled, the body is encrypted to the user's public
 key transparently.
@@ -323,11 +323,11 @@ Shorthand for `send --in-reply-to COMMENT_ID`.
 ## `mark-read` / `mark-unread` { #mark-read-mark-unread }
 
 ```bash
-nobox mark-read   --name X --id COMMENT_ID
+nobox mark-read --name X --id COMMENT_ID
 nobox mark-unread --name X --id COMMENT_ID
 ```
 
-Manages the local `\Seen` flag. Doesn't touch GitHub. Rare in normal flow —
+Manages the local `\Seen` flag. Doesn't touch GitHub. Rare in normal flow - 
 `read-message` already marks `\Seen`.
 
 ## `delete`
@@ -345,8 +345,8 @@ comment (use `delete-inbox --remote` if you want full remote cleanup).
 nobox doctor [--name X] [--json]
 ```
 
-Runs preflight checks (auth, rate limit, `has_issues`, issue state) and —
-if `--name` is given — posts a `**nobox doctor sentinel**` comment so you
+Runs preflight checks (auth, rate limit, `has_issues`, issue state) and - 
+if `--name` is given - posts a `**nobox doctor sentinel**` comment so you
 can confirm the email loop works end-to-end. The sentinel is tagged with a
 `kind:"sentinel"` meta block so the poller drops it on ingest, never to be
 seen by your agent.
@@ -409,7 +409,7 @@ and the IMAP password. Private files are mode `0600`.
 ## Source: https://nobox.evilsocket.net/how-it-works/
 
 ---
-title: How it works — reverse-engineering GitHub's reply-by-email token
+title: How it works - reverse-engineering GitHub's reply-by-email token
 description: Field-by-field breakdown of GitHub's reply+<TOKEN>@reply.github.com address. Base32-encoded uid + MAC + thread_id + msgpack tail; the legacy hex variant; the SMTP no-validation behavior; the security implications.
 ---
 
@@ -425,30 +425,30 @@ agent side.
 ## The token isn't opaque
 
 > **⚠ Never share a `reply+<TOKEN>@reply.github.com` address with anyone.
-> Each token is effectively a scoped bearer credential — it lets whoever
+> Each token is effectively a scoped bearer credential - it lets whoever
 > holds it post a comment _as you_, on that specific issue, simply by
 > SMTPing a reply. The MAC stops forgery, but if the token itself leaks
 > (forwarded email, screenshot, paste into a chat), the holder can
 > impersonate you on that thread. The only way to revoke an outstanding
-> reply token is to change your GitHub password — that rotates the keying
+> reply token is to change your GitHub password - that rotates the keying
 > material and invalidates every still-live token at once.**
 
-`<TOKEN>` is a structured binary blob — base32-encoded without padding,
-26–30 bytes on the wire. (The old hex variant was twice as long and was
+`<TOKEN>` is a structured binary blob - base32-encoded without padding,
+26 - 30 bytes on the wire. (The old hex variant was twice as long and was
 compressed to base32 around 2022.)
 
 ```
 uid(4) || mac(10) || thread_id(4) || msgpack([kind, subject_id])
 ```
 
-### `uid` — 4 bytes, big-endian uint32, **in the clear**
+### `uid` - 4 bytes, big-endian uint32, **in the clear**
 
 Recipient's GitHub user ID. The first 7 base32 chars of any token
-directly identify the recipient — no API call needed. Leaked notification
+directly identify the recipient - no API call needed. Leaked notification
 emails are therefore trivially attributable to a specific GitHub user via
 `github.com/<username>.png` reverse-mapping.
 
-### `mac` — 10 bytes / 80-bit authenticator
+### `mac` - 10 bytes / 80-bit authenticator
 
 Empirically depends on `uid`, `thread_id`, and almost certainly the
 `(kind, subject_id)` tuple as well. Different recipients of the same
@@ -457,19 +457,19 @@ subject get different MACs. No field can be mutated without invalidating
 it.
 
 **The keying material rotates on GitHub password reset.** Old reply
-tokens stop working once you change your password — that's the only
+tokens stop working once you change your password - that's the only
 externally-visible revocation path.
 
-### `thread_id` — 4 bytes, big-endian uint32
+### `thread_id` - 4 bytes, big-endian uint32
 
 A global notification-delivery counter. Shared across all recipients of
 one notification event, unique per delivery (same user receiving two
 notifications about the same subject gets two different `thread_id`s).
 
 Currently in the 1.78B range and growing ~1B every six months. GitHub
-will need to migrate the field before it hits 2³² in roughly two years.
+will need to migrate the field before it hits 2^32 in roughly two years.
 
-### `msgpack` tail — 2-element array `[kind, subject_id]`
+### `msgpack` tail - 2-element array `[kind, subject_id]`
 
 `kind` is a single ASCII char identifying the subject type:
 
@@ -483,8 +483,8 @@ will need to migrate the field before it hits 2³² in roughly two years.
 | `'r'` | Release | Inferred |
 
 `subject_id` is GitHub's global database ID for the subject (not the
-per-repo `#N`) — encoded with msgpack's int-tag autosizing:
-`ce` + 4 bytes for `uint32` (below 2³²), `cf` + 8 bytes for `uint64`
+per-repo `#N`) - encoded with msgpack's int-tag autosizing:
+`ce` + 4 bytes for `uint32` (below 2^32), `cf` + 8 bytes for `uint64`
 above.
 
 **The token has no repo field.** GitHub recovers the repo server-side by
@@ -516,12 +516,12 @@ valid:
 - Any sender.
 - Any token mutation.
 - Even arbitrary local-part prefixes (`notifications+`, `noreply+`,
-  `postmaster`, …).
+  `postmaster`, ...).
 
 All real token validation happens **post-DATA inside metroplex**, which
 means:
 
-- **No liveness oracle** via SMTP probing — you cannot distinguish a
+- **No liveness oracle** via SMTP probing - you cannot distinguish a
   valid token from an invalid one at the protocol level.
 - **The MAC is the only thing stopping forgery.**
 - `uid` being plaintext in the prefix means leaked notification emails
@@ -532,7 +532,7 @@ means:
 
 nobox itself does not decode the token. It only needs the GitHub REST
 API on the agent side and the user's regular reply-to-email behaviour on
-the human side. The token research is *why we know this works* — it
+the human side. The token research is *why we know this works* - it
 proves the design isn't fragile and isn't relying on undocumented
 internals being friendly. The reply pipeline has been stable since 2011
 (the year the feature shipped), with the only externally visible change
@@ -563,7 +563,7 @@ shipped to the model when the tools are loaded, plus per-tool docstrings.
 claude mcp add --transport stdio nobox -- nobox mcp
 ```
 
-That's it — Claude Code will spawn `nobox mcp` as a subprocess when needed,
+That's it - Claude Code will spawn `nobox mcp` as a subprocess when needed,
 read the server-level instructions, and expose the tools to the model.
 
 ### Claude Desktop, Cursor, others
@@ -573,10 +573,10 @@ argument. Example (Claude Desktop `mcpServers` block):
 
 ```json
 {
-  "nobox": {
-    "command": "nobox",
-    "args": ["mcp"]
-  }
+ "nobox": {
+ "command": "nobox",
+ "args": ["mcp"]
+ }
 }
 ```
 
@@ -589,11 +589,11 @@ argument. Example (Claude Desktop `mcpServers` block):
 | `read_message(name, comment_id, raw=false)` | Full body of a single message. Marks it `\Seen`. |
 | `send_message(name, body, in_reply_to=null)` | Post a new comment; user gets the notification email. |
 | `mark_read(name, comment_id)` / `mark_unread(...)` | Toggle the local `\Seen` flag. |
-| `create_inbox(name, repo, pgp=false, ...)` | ⚠ Destructive — never call without explicit user instruction. |
-| `delete_inbox(name, local_only=false)` | ⚠ Destructive — full wipe (issue + local) by default. |
+| `create_inbox(name, repo, pgp=false, ...)` | ⚠ Destructive - never call without explicit user instruction. |
+| `delete_inbox(name, local_only=false)` | ⚠ Destructive - full wipe (issue + local) by default. |
 | `doctor(name=null)` | Diagnostic; posts a sentinel comment that the poller filters out. |
 
-`read_inbox` returns previews only on purpose — calling `read_message` for
+`read_inbox` returns previews only on purpose - calling `read_message` for
 every item would dump full bodies into the agent's context every poll
 cycle. The agent should `read_inbox` first, decide which messages matter,
 then `read_message` only those.
@@ -618,8 +618,8 @@ The MCP `instructions` block tells the agent to ask the user **once**:
 > Want me to set up a recurring check of your nobox inbox every 10 minutes
 > so I can respond to your replies without you having to nudge me?
 
-…and to create the schedule only after explicit user approval. Recommended
-interval is **10 minutes** — fast enough to feel responsive over email,
+...and to create the schedule only after explicit user approval. Recommended
+interval is **10 minutes** - fast enough to feel responsive over email,
 slow enough to stay well within GitHub's 5000 req/hour rate limit even
 across many inboxes.
 
@@ -634,13 +634,13 @@ All tools return JSON-serialisable dicts. `read_inbox` returns a list of:
 
 ```json
 {
-  "comment_id": 4508692935,
-  "from": "evilsocket",
-  "ts": "2026-05-21T13:24:18Z",
-  "subject": "Re: eddy",
-  "flags": [],
-  "direction": "in",
-  "preview": "hello, can you read me?…"
+ "comment_id": 4508692935,
+ "from": "evilsocket",
+ "ts": "2026-05-21T13:24:18Z",
+ "subject": "Re: eddy",
+ "flags": [],
+ "direction": "in",
+ "preview": "hello, can you read me?..."
 }
 ```
 
@@ -696,7 +696,7 @@ discoverable. You can also invoke it explicitly with `/nobox`.
 
 The skill description triggers auto-invocation when the user asks for
 async / leave-a-note / email-style follow-up patterns ("ping me when
-done", "leave me a message", "check my inbox", "email me a summary"…).
+done", "leave me a message", "check my inbox", "email me a summary"...).
 
 The body covers:
 
@@ -709,7 +709,7 @@ The body covers:
   `read_message` for actionable items → `send_message` with `in_reply_to`.
 - **Polling pattern**: if the runtime supports recurring tasks
   (`/schedule`, `/loop`, cron, etc.), Claude should propose a 10-minute
-  recurring check **and only set it up after the user agrees** — never
+  recurring check **and only set it up after the user agrees** - never
   silently.
 - **Safety**: `create_inbox` and `delete_inbox` are destructive; never
   call them without explicit user instruction.
@@ -776,13 +776,13 @@ After that, encryption is transparent on both sides.
 
 ```bash
 nobox create-inbox \
-  --repo OWNER/REPO \
-  --name secure \
-  --pgp \
-  --user-pgp-key ~/.gnupg/me.pub.asc
+ --repo OWNER/REPO \
+ --name secure \
+ --pgp \
+ --user-pgp-key ~/.gnupg/me.pub.asc
 ```
 
-`--user-pgp-key` points at your armored PGP public key — that's the key
+`--user-pgp-key` points at your armored PGP public key - that's the key
 nobox encrypts outgoing comments to. Export it once with `gpg --armor
 --export <your-fingerprint> > ~/.gnupg/me.pub.asc` if you don't have it
 already.
@@ -793,9 +793,9 @@ When the agent calls `send_message`:
 
 1. The body is plaintext markdown.
 2. nobox encrypts it to **your public key** and signs with the **inbox
-   private key**.
+  private key**.
 3. The ASCII-armored ciphertext goes into a fenced `text` code block.
-4. nobox appends its usual `<!-- nobox-meta {…, "pgp":true} -->` tag.
+4. nobox appends its usual `<!-- nobox-meta {..., "pgp":true} -->` tag.
 5. The whole thing is posted as a GitHub issue comment.
 
 GitHub emails you a notification containing the armored block. You
@@ -809,7 +809,7 @@ When the agent calls `read_message` (or any `read_inbox` with `decrypt=True`):
 2. It looks for an ASCII-armored `-----BEGIN PGP MESSAGE-----` block.
 3. If present, it decrypts with the **inbox private key**.
 4. If a signer key is configured, it verifies the signature (failure is
-   non-fatal; the plaintext is still returned with a warning).
+  non-fatal; the plaintext is still returned with a warning).
 5. The returned `body` field is plaintext.
 
 `raw=true` always returns the untouched original (still encrypted), useful
@@ -819,12 +819,12 @@ for debugging.
 
 For incoming replies, the user is expected to encrypt to the inbox's
 public key in their own email client (Enigmail, GPGSuite, Mailvelope,
-etc.). The inbox public key is in the issue body for convenience — your
+etc.). The inbox public key is in the issue body for convenience - your
 email client may auto-discover it via `gpg --import` from the page, or you
 can paste it manually.
 
 If you reply without encrypting, nobox still ingests the comment but
-won't be able to decrypt anything — the body field will be plaintext as
+won't be able to decrypt anything - the body field will be plaintext as
 posted.
 
 ## Key rotation
@@ -832,7 +832,7 @@ posted.
 There's no built-in rotation command yet. To rotate:
 
 1. `nobox delete-inbox --name X` (full wipe).
-2. `nobox create-inbox --name X --pgp --user-pgp-key …` again.
+2. `nobox create-inbox --name X --pgp --user-pgp-key ...` again.
 
 A new inbox keypair is generated; the old private key file under
 `$XDG_STATE_HOME/nobox/inboxes/X/` is removed as part of the delete.
@@ -849,7 +849,7 @@ A new inbox keypair is generated; the old private key file under
   comments as you, but they can't read the encrypted ciphertext you
   received because they don't have your PGP private key.
 - The MAC keying material in GitHub reply tokens rotates on **GitHub
-  password reset**. The PGP keypair is **independent** of that — rotating
+  password reset**. The PGP keypair is **independent** of that - rotating
   your GitHub password does not invalidate the PGP keys, and vice versa.
 
 ## CLI behaviour with PGP
@@ -876,8 +876,8 @@ description: nobox serve-imap runs a loopback IMAP4rev1 bridge on 127.0.0.1:1143
 
 `nobox serve-imap` runs an IMAP4rev1 server on the loopback interface that
 translates IMAP operations into GitHub REST calls. Point any mail client at
-it (Thunderbird, Apple Mail, mutt, neomutt, …) and use a nobox inbox as a
-regular mailbox — including **composing replies** that get posted to GitHub
+it (Thunderbird, Apple Mail, mutt, neomutt, ...) and use a nobox inbox as a
+regular mailbox - including **composing replies** that get posted to GitHub
 as real comments.
 
 Requires the `[imap]` install extra (Twisted).
@@ -889,7 +889,7 @@ nobox serve-imap [--host 127.0.0.1] [--port 1143]
 ```
 
 The server **refuses to bind to anything other than the loopback
-interface** by design — there's no TLS, and the IMAP password is
+interface** by design - there's no TLS, and the IMAP password is
 generated per inbox at create time. Loopback-only keeps that acceptable.
 
 ## Mailbox structure
@@ -926,7 +926,7 @@ long as the backing issue exists.
 | `NOOP` / `CHECK` / `CLOSE` / `LOGOUT` / `EXPUNGE` | ✓ |
 | `COPY` / `MOVE` | ✗ (use `STORE +FLAGS \Deleted` + `EXPUNGE` to delete) |
 
-### APPEND to Sent — composing replies from your mail client
+### APPEND to Sent - composing replies from your mail client
 
 When you reply to or compose a message in a mail client that's set up to
 "save sent messages on the server" (the default for Thunderbird with an
@@ -935,12 +935,12 @@ IMAP+SMTP account), the client appends the outgoing RFC822 message to the
 "send this":
 
 1. The RFC822 bytes are parsed; the text/plain body is extracted (or
-   text/html stripped if there's no plaintext alternative).
+  text/html stripped if there's no plaintext alternative).
 2. The `In-Reply-To` / `References` header is matched against nobox's
-   synthesised `<comment-{id}@nobox.local>` Message-ID format; if a hit,
-   the post is threaded under that comment.
+  synthesised `<comment-{id}@nobox.local>` Message-ID format; if a hit,
+  the post is threaded under that comment.
 3. The body is posted via the GitHub REST API exactly as if you'd run
-   `nobox send`.
+  `nobox send`.
 
 Result: replies in Thunderbird Just Work. PGP encryption (if the inbox
 has it enabled) is applied transparently before posting.
@@ -950,7 +950,7 @@ has it enabled) is applied transparently before posting.
 > to use "IMAP for outgoing mail" mode, or set up a stub SMTP server
 > that does nothing (some clients accept this).
 
-### IDLE — push notifications
+### IDLE - push notifications
 
 When a connected client issues `IDLE`, nobox attaches a background
 `LoopingCall` that polls GitHub every 60s. When new comments land in the
@@ -958,9 +958,9 @@ backing issue:
 
 1. The poller persists them to SQLite (same path as `nobox read-inbox`).
 2. If the message count grew, `IMAP4Server.newMessages(exists, recent)`
-   fires, which sends an untagged `EXISTS` response to the client.
+  fires, which sends an untagged `EXISTS` response to the client.
 3. The client wakes up, can `DONE` the IDLE, fetch the new mail, and
-   re-enter IDLE.
+  re-enter IDLE.
 
 `STORE` operations also notify all attached clients via `flagsChanged`,
 so two clients connected to the same inbox stay in sync on read/unread
@@ -994,11 +994,11 @@ threading on the GitHub side.
 5. Username: your inbox name (e.g. `daily`).
 6. Password: `cat ~/.local/state/nobox/inboxes/daily/imap.password`.
 7. For Sent-from-IMAP behaviour, configure outgoing mail to use the same
-   account and check **"Save sent messages on the server"** under the
-   account settings. SMTP can be set to anything (or a dummy server);
-   nobox handles the actual posting via the IMAP APPEND.
+  account and check **"Save sent messages on the server"** under the
+  account settings. SMTP can be set to anything (or a dummy server);
+  nobox handles the actual posting via the IMAP APPEND.
 
-Thunderbird may complain about the unencrypted connection — confirm
+Thunderbird may complain about the unencrypted connection - confirm
 that's fine since the traffic never leaves your machine.
 
 ## mutt setup
