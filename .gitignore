@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.Python
+build/
+dist/
+.eggs/
+
+# Virtual envs
+.venv/
+venv/
+.env
+.env.*
+
+# Caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tox/
+htmlcov/
+.coverage
+.coverage.*
+
+# nobox-specific
+state/
+*.pgp.key
+*.priv.asc
+imap.password
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
