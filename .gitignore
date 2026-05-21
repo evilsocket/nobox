@@ -29,6 +29,9 @@ state/
 *.priv.asc
 imap.password
 
+# MkDocs build output
+site/
+
 # OS
 .DS_Store
 Thumbs.db

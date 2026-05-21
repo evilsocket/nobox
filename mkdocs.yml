@@ -1,0 +1,89 @@
+site_name: nobox
+site_description: A GitHub-as-email inbox for AI ↔ human async messaging. Free, durable, optionally PGP-encrypted mailboxes backed by GitHub issues. CLI, MCP server, Claude Code skill, and a local IMAP bridge.
+site_url: https://nobox.evilsocket.net/
+site_author: Simone Margaritelli
+repo_url: https://github.com/evilsocket/nobox
+repo_name: evilsocket/nobox
+edit_uri: edit/main/docs/
+docs_dir: docs
+copyright: Copyright &copy; Simone Margaritelli & Alessandro Coccia, released under the MIT License
+
+theme:
+  name: material
+  custom_dir: overrides
+  language: en
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: orange
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: orange
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+plugins:
+  - search
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      effect: zoom
+      slide_effect: slide
+      width: 100%
+      height: auto
+      zoomable: true
+      draggable: true
+      auto_caption: false
+      caption_position: bottom
+
+nav:
+  - Home: index.md
+  - Installation: install.md
+  - Usage: usage.md
+  - How it works: how-it-works.md
+  - MCP: mcp.md
+  - Claude Code Skill: skill.md
+  - PGP: pgp.md
+  - Local IMAP: imap.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/evilsocket/nobox
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/evilsocket

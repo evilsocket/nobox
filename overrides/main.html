@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{# Extra <head> content: JSON-LD structured data and extra meta tags for SEO/GEO. #}
+{% block extrahead %}
+  {{ super() }}
+
+  {# Canonical SoftwareApplication schema, emitted on every page. #}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "nobox",
+    "alternateName": "evilsocket/nobox",
+    "url": "{{ config.site_url | default('https://nobox.evilsocket.net/', true) }}",
+    "description": "{{ config.site_description }}",
+    "applicationCategory": "CommunicationApplication",
+    "applicationSubCategory": "Async messaging",
+    "operatingSystem": "Linux, macOS, Windows, BSD",
+    "softwareVersion": "0.1.0",
+    "sameAs": [
+      "https://github.com/evilsocket/nobox"
+    ],
+    "downloadUrl": "https://github.com/evilsocket/nobox",
+    "license": "https://opensource.org/license/mit",
+    "author": [
+      {
+        "@type": "Person",
+        "name": "Simone Margaritelli",
+        "url": "https://www.evilsocket.net/",
+        "sameAs": [
+          "https://github.com/evilsocket",
+          "https://x.com/evilsocket"
+        ]
+      },
+      {
+        "@type": "Person",
+        "name": "Alessandro Coccia",
+        "url": "https://github.com/zangarmarsh",
+        "sameAs": [
+          "https://github.com/zangarmarsh"
+        ]
+      }
+    ],
+    "keywords": "github email inbox, ai agent messaging, async messaging, mcp server, model context protocol, github issues, reply by email, claude code skill, github notification reverse engineering, base32 token, agent inbox, no MTA, free email for agents, pgp encrypted inbox",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
+  {# Breadcrumb trail for the current page. #}
+  {% if page and page.url %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "nobox",
+        "item": "{{ config.site_url | default('https://nobox.evilsocket.net/', true) }}"
+      }{% if page.url and page.url != '' %},
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "{{ page.title | e }}",
+        "item": "{{ config.site_url | default('https://nobox.evilsocket.net/', true) }}{{ page.url }}"
+      }{% endif %}
+    ]
+  }
+  </script>
+  {% endif %}
+
+  {# Open Graph + Twitter cards (text-only; social plugin not enabled). #}
+  {% set _og_title = (page.title if page else config.site_name) | default(config.site_name, true) %}
+  {% set _og_desc = (page.meta.description if (page and page.meta) else config.site_description) | default(config.site_description, true) %}
+  {% set _og_url = config.site_url | default('https://nobox.evilsocket.net/', true) ~ (page.url if page else '') %}
+  <meta property="og:type" content="{% if page and page.is_homepage %}website{% else %}article{% endif %}">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  <meta property="og:title" content="{{ _og_title }}">
+  <meta property="og:description" content="{{ _og_desc }}">
+  <meta property="og:url" content="{{ _og_url }}">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ _og_title }}">
+  <meta name="twitter:description" content="{{ _og_desc }}">
+  <meta name="twitter:creator" content="@evilsocket">
+
+  {# Keywords meta tag — modest SEO signal but explicit for GEO crawlers. #}
+  <meta name="keywords" content="nobox, github email inbox, ai agent messaging, mcp server, model context protocol, claude code skill, github issues as mailbox, reply by email, github notification token, reverse engineering, base32 token, async messaging for ai, free email for agents, no mail server, pgp encrypted inbox, github graphql delete issue, github rest api, evilsocket">
+  <meta name="author" content="Simone Margaritelli, Alessandro Coccia">
+{% endblock %}
