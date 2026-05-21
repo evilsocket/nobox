@@ -1,0 +1,1233 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="nobox serve-imap runs a loopback IMAP4rev1 bridge on 127.0.0.1:1143 that translates IMAP operations into GitHub REST calls. Read, reply, and idle from Thunderbird or mutt.">
+      
+      
+        <meta name="author" content="Simone Margaritelli">
+      
+      
+        <link rel="canonical" href="https://nobox.evilsocket.net/imap/">
+      
+      
+        <link rel="prev" href="../pgp/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Local IMAP server - nobox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+ 
+
+ 
+ <script type="application/ld+json">
+ {
+ "@context": "https://schema.org",
+ "@type": "SoftwareApplication",
+ "name": "nobox",
+ "alternateName": "evilsocket/nobox",
+ "url": "https://nobox.evilsocket.net/",
+ "description": "A GitHub-as-email inbox for AI ↔ human async messaging. Free, durable, optionally PGP-encrypted mailboxes backed by GitHub issues. CLI, MCP server, Claude Code skill, and a local IMAP bridge.",
+ "applicationCategory": "CommunicationApplication",
+ "applicationSubCategory": "Async messaging",
+ "operatingSystem": "Linux, macOS, Windows, BSD",
+ "softwareVersion": "0.1.0",
+ "sameAs": [
+ "https://github.com/evilsocket/nobox"
+ ],
+ "downloadUrl": "https://github.com/evilsocket/nobox",
+ "license": "https://opensource.org/license/mit",
+ "author": [
+ {
+ "@type": "Person",
+ "name": "Simone Margaritelli",
+ "url": "https://www.evilsocket.net/",
+ "sameAs": [
+ "https://github.com/evilsocket",
+ "https://x.com/evilsocket"
+ ]
+ },
+ {
+ "@type": "Person",
+ "name": "Alessandro Coccia",
+ "url": "https://github.com/zangarmarsh",
+ "sameAs": [
+ "https://github.com/zangarmarsh"
+ ]
+ }
+ ],
+ "keywords": "github email inbox, ai agent messaging, async messaging, mcp server, model context protocol, github issues, reply by email, claude code skill, github notification reverse engineering, base32 token, agent inbox, no MTA, free email for agents, pgp encrypted inbox",
+ "offers": {
+ "@type": "Offer",
+ "price": "0",
+ "priceCurrency": "USD"
+ }
+ }
+ </script>
+
+ 
+ 
+ <script type="application/ld+json">
+ {
+ "@context": "https://schema.org",
+ "@type": "BreadcrumbList",
+ "itemListElement": [
+ {
+ "@type": "ListItem",
+ "position": 1,
+ "name": "nobox",
+ "item": "https://nobox.evilsocket.net/"
+ },
+ {
+ "@type": "ListItem",
+ "position": 2,
+ "name": "Local IMAP",
+ "item": "https://nobox.evilsocket.net/imap/"
+ }
+ ]
+ }
+ </script>
+ 
+
+ 
+ 
+ 
+ 
+ <meta property="og:type" content="article">
+ <meta property="og:site_name" content="nobox">
+ <meta property="og:title" content="Local IMAP">
+ <meta property="og:description" content="nobox serve-imap runs a loopback IMAP4rev1 bridge on 127.0.0.1:1143 that translates IMAP operations into GitHub REST calls. Read, reply, and idle from Thunderbird or mutt.">
+ <meta property="og:url" content="https://nobox.evilsocket.net/imap/">
+ <meta property="og:locale" content="en_US">
+ <meta name="twitter:card" content="summary_large_image">
+ <meta name="twitter:title" content="Local IMAP">
+ <meta name="twitter:description" content="nobox serve-imap runs a loopback IMAP4rev1 bridge on 127.0.0.1:1143 that translates IMAP operations into GitHub REST calls. Read, reply, and idle from Thunderbird or mutt.">
+ <meta name="twitter:creator" content="@evilsocket">
+
+ 
+ <meta name="keywords" content="nobox, github email inbox, ai agent messaging, mcp server, model context protocol, claude code skill, github issues as mailbox, reply by email, github notification token, reverse engineering, base32 token, async messaging for ai, free email for agents, no mail server, pgp encrypted inbox, github graphql delete issue, github rest api, evilsocket">
+ <meta name="author" content="Simone Margaritelli, Alessandro Coccia">
+
+  <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#local-imap-server" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="nobox" class="md-header__button md-logo" aria-label="nobox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            nobox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Local IMAP server
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="orange" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="orange" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/evilsocket/nobox" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    evilsocket/nobox
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="nobox" class="md-nav__button md-logo" aria-label="nobox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    nobox
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/evilsocket/nobox" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    evilsocket/nobox
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How it works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skill/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Claude Code Skill
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pgp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PGP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local IMAP
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local IMAP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#run-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mailbox-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mailbox structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#protocol-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Protocol scope
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Protocol scope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#append-to-sent-composing-replies-from-your-mail-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        APPEND to Sent - composing replies from your mail client
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#idle-push-notifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IDLE - push notifications
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#envelope-synthesis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Envelope synthesis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thunderbird-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thunderbird setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mutt-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mutt setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sync-triggers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync triggers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#offline-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offline mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#run-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mailbox-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mailbox structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#protocol-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Protocol scope
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Protocol scope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#append-to-sent-composing-replies-from-your-mail-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        APPEND to Sent - composing replies from your mail client
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#idle-push-notifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IDLE - push notifications
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#envelope-synthesis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Envelope synthesis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thunderbird-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thunderbird setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mutt-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mutt setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sync-triggers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync triggers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#offline-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offline mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/evilsocket/nobox/edit/main/docs/imap.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"></path></svg>
+    </a>
+  
+  
+
+
+<h1 id="local-imap-server">Local IMAP server<a class="headerlink" href="#local-imap-server" title="Permanent link">¶</a></h1>
+<p><code>nobox serve-imap</code> runs an IMAP4rev1 server on the loopback interface that
+translates IMAP operations into GitHub REST calls. Point any mail client at
+it (Thunderbird, Apple Mail, mutt, neomutt, ...) and use a nobox inbox as a
+regular mailbox - including <strong>composing replies</strong> that get posted to GitHub
+as real comments.</p>
+<p>Requires the <code>[imap]</code> install extra (Twisted).</p>
+<h2 id="run-it">Run it<a class="headerlink" href="#run-it" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>nobox<span class="w"> </span>serve-imap<span class="w"> </span><span class="o">[</span>--host<span class="w"> </span><span class="m">127</span>.0.0.1<span class="o">]</span><span class="w"> </span><span class="o">[</span>--port<span class="w"> </span><span class="m">1143</span><span class="o">]</span>
+</code></pre></div>
+<p>The server <strong>refuses to bind to anything other than the loopback
+interface</strong> by design - there's no TLS, and the IMAP password is
+generated per inbox at create time. Loopback-only keeps that acceptable.</p>
+<h2 id="mailbox-structure">Mailbox structure<a class="headerlink" href="#mailbox-structure" title="Permanent link">¶</a></h2>
+<p>One IMAP user per nobox inbox. Username = inbox name; password =
+<code>$XDG_STATE_HOME/nobox/inboxes/&lt;name&gt;/imap.password</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Folder</th>
+<th>Source</th>
+<th>Mutability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>INBOX</code></td>
+<td>direction=<code>in</code> messages, not <code>\Deleted</code></td>
+<td>STORE flags</td>
+</tr>
+<tr>
+<td><code>Sent</code></td>
+<td>direction=<code>out</code> messages</td>
+<td><strong>APPEND posts a new comment</strong>, STORE flags</td>
+</tr>
+<tr>
+<td><code>Drafts</code></td>
+<td>rows from the local <code>draft</code> table</td>
+<td>APPEND / STORE / EXPUNGE (local-only)</td>
+</tr>
+<tr>
+<td><code>Trash</code></td>
+<td>messages with the local <code>\Deleted</code> flag</td>
+<td>EXPUNGE clears flag</td>
+</tr>
+</tbody>
+</table>
+<p>UIDs are GitHub comment IDs; UIDVALIDITY is
+<code>inbox.uid_validity = created_at_unix XOR issue_id</code> and stays stable as
+long as the backing issue exists.</p>
+<h2 id="protocol-scope">Protocol scope<a class="headerlink" href="#protocol-scope" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CAPABILITY</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>LOGIN</code> (PLAIN, loopback only)</td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>LIST</code> / <code>LSUB</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>SELECT</code> / <code>EXAMINE</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>STATUS</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>UID FETCH</code> (BODY[], BODYSTRUCTURE, ENVELOPE, FLAGS, INTERNALDATE)</td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>UID SEARCH</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>UID STORE</code> (flag changes notify IDLE clients)</td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>APPEND</code> to <code>Drafts</code> (local-only stash)</td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>APPEND</code> to <code>Sent</code> (posts a real GitHub comment)</td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>IDLE</code> (push notifications via background polling)</td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>NOOP</code> / <code>CHECK</code> / <code>CLOSE</code> / <code>LOGOUT</code> / <code>EXPUNGE</code></td>
+<td>✓</td>
+</tr>
+<tr>
+<td><code>COPY</code> / <code>MOVE</code></td>
+<td>✗ (use <code>STORE +FLAGS \Deleted</code> + <code>EXPUNGE</code> to delete)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="append-to-sent-composing-replies-from-your-mail-client">APPEND to Sent - composing replies from your mail client<a class="headerlink" href="#append-to-sent-composing-replies-from-your-mail-client" title="Permanent link">¶</a></h3>
+<p>When you reply to or compose a message in a mail client that's set up to
+"save sent messages on the server" (the default for Thunderbird with an
+IMAP+SMTP account), the client appends the outgoing RFC822 message to the
+<code>Sent</code> folder via IMAP. nobox intercepts that APPEND and treats it as
+"send this":</p>
+<ol>
+<li>The RFC822 bytes are parsed; the text/plain body is extracted (or
+  text/html stripped if there's no plaintext alternative).</li>
+<li>The <code>In-Reply-To</code> / <code>References</code> header is matched against nobox's
+  synthesised <code>&lt;comment-{id}@nobox.local&gt;</code> Message-ID format; if a hit,
+  the post is threaded under that comment.</li>
+<li>The body is posted via the GitHub REST API exactly as if you'd run
+  <code>nobox send</code>.</li>
+</ol>
+<p>Result: replies in Thunderbird Just Work. PGP encryption (if the inbox
+has it enabled) is applied transparently before posting.</p>
+<blockquote>
+<p><strong>Caveat:</strong> mail clients that require SMTP to "send" before they
+APPEND to Sent won't work without an SMTP shim. Configure your client
+to use "IMAP for outgoing mail" mode, or set up a stub SMTP server
+that does nothing (some clients accept this).</p>
+</blockquote>
+<h3 id="idle-push-notifications">IDLE - push notifications<a class="headerlink" href="#idle-push-notifications" title="Permanent link">¶</a></h3>
+<p>When a connected client issues <code>IDLE</code>, nobox attaches a background
+<code>LoopingCall</code> that polls GitHub every 60s. When new comments land in the
+backing issue:</p>
+<ol>
+<li>The poller persists them to SQLite (same path as <code>nobox read-inbox</code>).</li>
+<li>If the message count grew, <code>IMAP4Server.newMessages(exists, recent)</code>
+  fires, which sends an untagged <code>EXISTS</code> response to the client.</li>
+<li>The client wakes up, can <code>DONE</code> the IDLE, fetch the new mail, and
+  re-enter IDLE.</li>
+</ol>
+<p><code>STORE</code> operations also notify all attached clients via <code>flagsChanged</code>,
+so two clients connected to the same inbox stay in sync on read/unread
+state.</p>
+<h2 id="envelope-synthesis">Envelope synthesis<a class="headerlink" href="#envelope-synthesis" title="Permanent link">¶</a></h2>
+<p>GitHub comments aren't RFC822 messages, so nobox synthesises the
+envelope when serving them:</p>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Message-ID</code></td>
+<td><code>&lt;comment-{id}@nobox.local&gt;</code></td>
+</tr>
+<tr>
+<td><code>In-Reply-To</code> / <code>References</code></td>
+<td>Chained via the local <code>in_reply_to_id</code> graph</td>
+</tr>
+<tr>
+<td><code>Date</code></td>
+<td>GitHub <code>created_at</code> (RFC 2822-formatted)</td>
+</tr>
+<tr>
+<td><code>From</code></td>
+<td><code>"&lt;author-login&gt; via GitHub" &lt;noreply@github.com&gt;</code></td>
+</tr>
+<tr>
+<td><code>To</code></td>
+<td><code>"&lt;your-login&gt;" &lt;&lt;your-login&gt;@nobox.local&gt;</code></td>
+</tr>
+<tr>
+<td><code>Subject</code></td>
+<td>The <code>subject</code> field from nobox metadata, or <code>Re: &lt;inbox-name&gt;</code></td>
+</tr>
+<tr>
+<td>Body</td>
+<td>Trimmed text/plain; PGP-decrypted if applicable</td>
+</tr>
+</tbody>
+</table>
+<p>The synthesised <code>Message-ID</code> round-trips through <code>In-Reply-To</code> on the
+client side, which is how APPEND-to-Sent reconstructs the <code>in_reply_to</code>
+threading on the GitHub side.</p>
+<h2 id="thunderbird-setup">Thunderbird setup<a class="headerlink" href="#thunderbird-setup" title="Permanent link">¶</a></h2>
+<ol>
+<li>Add a new mail account, e.g. <code>daily@nobox.local</code>.</li>
+<li>Server type: <strong>IMAP</strong>, port <code>1143</code>, hostname <code>localhost</code>.</li>
+<li>Connection security: <strong>None</strong> (loopback).</li>
+<li>Authentication: <strong>Normal password</strong>.</li>
+<li>Username: your inbox name (e.g. <code>daily</code>).</li>
+<li>Password: <code>cat ~/.local/state/nobox/inboxes/daily/imap.password</code>.</li>
+<li>For Sent-from-IMAP behaviour, configure outgoing mail to use the same
+  account and check <strong>"Save sent messages on the server"</strong> under the
+  account settings. SMTP can be set to anything (or a dummy server);
+  nobox handles the actual posting via the IMAP APPEND.</li>
+</ol>
+<p>Thunderbird may complain about the unencrypted connection - confirm
+that's fine since the traffic never leaves your machine.</p>
+<h2 id="mutt-setup">mutt setup<a class="headerlink" href="#mutt-setup" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>set folder = "imap://daily@localhost:1143"
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>set imap_pass = "`cat ~/.local/state/nobox/inboxes/daily/imap.password`"
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>set ssl_starttls = no
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>set ssl_force_tls = no
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>mailboxes = "imap://daily@localhost:1143/INBOX"
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a># Compose replies that land via APPEND-to-Sent
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>set record = "imap://daily@localhost:1143/Sent"
+</code></pre></div>
+<h2 id="sync-triggers">Sync triggers<a class="headerlink" href="#sync-triggers" title="Permanent link">¶</a></h2>
+<ul>
+<li><code>SELECT</code> / <code>STATUS</code> / <code>FETCH</code> triggers a one-shot GitHub poll before
+  serving so the client sees fresh data on demand.</li>
+<li><code>IDLE</code> triggers a 60s <code>LoopingCall</code> that polls in the background.</li>
+<li><code>APPEND</code> to Sent triggers a single POST via the GitHub API.</li>
+</ul>
+<h2 id="offline-mode">Offline mode<a class="headerlink" href="#offline-mode" title="Permanent link">¶</a></h2>
+<p>For offline use, set <code>NOBOX_OFFLINE=1</code> in the environment. The IMAP
+server will serve straight from the local SQLite mirror, skipping
+GitHub round trips on every FETCH. APPEND-to-Sent still tries to POST
+(that's the whole point), so wire up GitHub auth if you want to
+exercise that path; otherwise stick to APPEND-to-Drafts or <code>STORE</code> for
+offline browsing.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © Simone Margaritelli &amp; Alessandro Coccia, released under the MIT License
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/evilsocket/nobox" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://x.com/evilsocket" target="_blank" rel="noopener" title="x.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M357.2 48h70.6L273.6 224.2 455 464H313L201.7 318.6 74.5 464H3.8l164.9-188.5L-5.2 48h145.6l100.5 132.9zm-24.8 373.8h39.1L119.1 88h-42z"></path></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nobox.evilsocket.net/sitemap.xml

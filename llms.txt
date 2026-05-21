@@ -1,0 +1,28 @@
+# nobox
+
+> nobox lets you use a single GitHub repository to host multiple email-style inboxes - one per GitHub issue - as free, durable, optionally PGP-encrypted mailboxes between an AI agent and a human user. The human reads and replies through their normal email client (GitHub notification emails); the agent reads and posts via the GitHub REST API. Same conversation, two protocols.
+
+Project URL: https://github.com/evilsocket/nobox
+Documentation: https://nobox.evilsocket.net/
+License: MIT
+Language: Python 3.11+
+Authors: Simone Margaritelli (evilsocket), Alessandro Coccia (zangarmarsh)
+
+## Why nobox
+
+- **No mail server.** GitHub already runs the MTA. nobox sits entirely on the agent side and exploits the `reply+<token>@reply.github.com` notification system.
+- **No paid services.** No domain, no SMTP/IMAP host, no hosted "inbox-as-a-service" SaaS.
+- **Multiple surfaces.** Same Python binary serves a CLI, an MCP stdio server (for Claude Code / Desktop / Cursor / any MCP client), a Claude Code skill, and a loopback-only IMAP4rev1 server for real mail clients.
+- **POP3-style retention.** Default: each comment is deleted from GitHub once persisted to the local SQLite archive. The GitHub side stays clean; the local store keeps full history.
+- **Optional PGP.** Per-inbox keypair; outgoing traffic encrypted to the user's public key, incoming PGP-armored replies auto-decrypted.
+
+## Documentation
+
+- [Home](https://nobox.evilsocket.net/): overview, origin, and what nobox is for.
+- [Installation](https://nobox.evilsocket.net/install/): uv tool install / pipx from the repo, optional `[imap]` and `[pgp]` extras.
+- [Usage](https://nobox.evilsocket.net/usage/): every CLI subcommand (`create-inbox`, `read-inbox`, `read-message`, `send`, `reply`, `mark-read`, `mark-unread`, `delete`, `delete-inbox`, `doctor`, `serve-imap`, `mcp`, `install-skill`).
+- [How it works](https://nobox.evilsocket.net/how-it-works/): the GitHub `reply+<TOKEN>@reply.github.com` token format we reverse-engineered (uid || mac || thread_id || msgpack([kind, subject_id])), the legacy hex variant, the SMTP-layer no-validation behaviour, and the security implications.
+- [MCP](https://nobox.evilsocket.net/mcp/): the FastMCP stdio server and the tools it exposes; recommended polling pattern for async agents.
+- [Claude Code Skill](https://nobox.evilsocket.net/skill/): the bundled `SKILL.md` and what it tells Claude Code about nobox.
+- [PGP](https://nobox.evilsocket.net/pgp/): opt-in encryption setup.
+- [Local IMAP](https://nobox.evilsocket.net/imap/): pointing Thunderbird/mutt at `127.0.0.1:1143`.

@@ -1,0 +1,1090 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Field-by-field breakdown of GitHub's reply+&lt;TOKEN&gt;@reply.github.com address. Base32-encoded uid + MAC + thread_id + msgpack tail; the legacy hex variant; the SMTP no-validation behavior; the security implications.">
+      
+      
+        <meta name="author" content="Simone Margaritelli">
+      
+      
+        <link rel="canonical" href="https://nobox.evilsocket.net/how-it-works/">
+      
+      
+        <link rel="prev" href="../usage/">
+      
+      
+        <link rel="next" href="../mcp/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>How it works - reverse-engineering GitHub's reply-by-email token - nobox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+ 
+
+ 
+ <script type="application/ld+json">
+ {
+ "@context": "https://schema.org",
+ "@type": "SoftwareApplication",
+ "name": "nobox",
+ "alternateName": "evilsocket/nobox",
+ "url": "https://nobox.evilsocket.net/",
+ "description": "A GitHub-as-email inbox for AI ↔ human async messaging. Free, durable, optionally PGP-encrypted mailboxes backed by GitHub issues. CLI, MCP server, Claude Code skill, and a local IMAP bridge.",
+ "applicationCategory": "CommunicationApplication",
+ "applicationSubCategory": "Async messaging",
+ "operatingSystem": "Linux, macOS, Windows, BSD",
+ "softwareVersion": "0.1.0",
+ "sameAs": [
+ "https://github.com/evilsocket/nobox"
+ ],
+ "downloadUrl": "https://github.com/evilsocket/nobox",
+ "license": "https://opensource.org/license/mit",
+ "author": [
+ {
+ "@type": "Person",
+ "name": "Simone Margaritelli",
+ "url": "https://www.evilsocket.net/",
+ "sameAs": [
+ "https://github.com/evilsocket",
+ "https://x.com/evilsocket"
+ ]
+ },
+ {
+ "@type": "Person",
+ "name": "Alessandro Coccia",
+ "url": "https://github.com/zangarmarsh",
+ "sameAs": [
+ "https://github.com/zangarmarsh"
+ ]
+ }
+ ],
+ "keywords": "github email inbox, ai agent messaging, async messaging, mcp server, model context protocol, github issues, reply by email, claude code skill, github notification reverse engineering, base32 token, agent inbox, no MTA, free email for agents, pgp encrypted inbox",
+ "offers": {
+ "@type": "Offer",
+ "price": "0",
+ "priceCurrency": "USD"
+ }
+ }
+ </script>
+
+ 
+ 
+ <script type="application/ld+json">
+ {
+ "@context": "https://schema.org",
+ "@type": "BreadcrumbList",
+ "itemListElement": [
+ {
+ "@type": "ListItem",
+ "position": 1,
+ "name": "nobox",
+ "item": "https://nobox.evilsocket.net/"
+ },
+ {
+ "@type": "ListItem",
+ "position": 2,
+ "name": "How it works",
+ "item": "https://nobox.evilsocket.net/how-it-works/"
+ }
+ ]
+ }
+ </script>
+ 
+
+ 
+ 
+ 
+ 
+ <meta property="og:type" content="article">
+ <meta property="og:site_name" content="nobox">
+ <meta property="og:title" content="How it works">
+ <meta property="og:description" content="Field-by-field breakdown of GitHub's reply+&lt;TOKEN&gt;@reply.github.com address. Base32-encoded uid + MAC + thread_id + msgpack tail; the legacy hex variant; the SMTP no-validation behavior; the security implications.">
+ <meta property="og:url" content="https://nobox.evilsocket.net/how-it-works/">
+ <meta property="og:locale" content="en_US">
+ <meta name="twitter:card" content="summary_large_image">
+ <meta name="twitter:title" content="How it works">
+ <meta name="twitter:description" content="Field-by-field breakdown of GitHub's reply+&lt;TOKEN&gt;@reply.github.com address. Base32-encoded uid + MAC + thread_id + msgpack tail; the legacy hex variant; the SMTP no-validation behavior; the security implications.">
+ <meta name="twitter:creator" content="@evilsocket">
+
+ 
+ <meta name="keywords" content="nobox, github email inbox, ai agent messaging, mcp server, model context protocol, claude code skill, github issues as mailbox, reply by email, github notification token, reverse engineering, base32 token, async messaging for ai, free email for agents, no mail server, pgp encrypted inbox, github graphql delete issue, github rest api, evilsocket">
+ <meta name="author" content="Simone Margaritelli, Alessandro Coccia">
+
+  <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-it-works" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="nobox" class="md-header__button md-logo" aria-label="nobox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            nobox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              How it works - reverse-engineering GitHub's reply-by-email token
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="orange" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="orange" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/evilsocket/nobox" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    evilsocket/nobox
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="nobox" class="md-nav__button md-logo" aria-label="nobox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    nobox
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/evilsocket/nobox" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    evilsocket/nobox
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How it works
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How it works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#the-token-isnt-opaque" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The token isn't opaque
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The token isn't opaque">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uid-4-bytes-big-endian-uint32-in-the-clear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        uid - 4 bytes, big-endian uint32, in the clear
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mac-10-bytes-80-bit-authenticator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mac - 10 bytes / 80-bit authenticator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thread_id-4-bytes-big-endian-uint32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        thread_id - 4 bytes, big-endian uint32
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#msgpack-tail-2-element-array-kind-subject_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        msgpack tail - 2-element array [kind, subject_id]
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#legacy-hex-variant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy hex variant
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#smtp-layer-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SMTP-layer behaviour
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-nobox-doesnt-decode-any-of-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why nobox doesn't decode any of this
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skill/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Claude Code Skill
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pgp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PGP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local IMAP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#the-token-isnt-opaque" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The token isn't opaque
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The token isn't opaque">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uid-4-bytes-big-endian-uint32-in-the-clear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        uid - 4 bytes, big-endian uint32, in the clear
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mac-10-bytes-80-bit-authenticator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mac - 10 bytes / 80-bit authenticator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thread_id-4-bytes-big-endian-uint32" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        thread_id - 4 bytes, big-endian uint32
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#msgpack-tail-2-element-array-kind-subject_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        msgpack tail - 2-element array [kind, subject_id]
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#legacy-hex-variant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy hex variant
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#smtp-layer-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SMTP-layer behaviour
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-nobox-doesnt-decode-any-of-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why nobox doesn't decode any of this
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/evilsocket/nobox/edit/main/docs/how-it-works.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"></path></svg>
+    </a>
+  
+  
+
+
+<h1 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">¶</a></h1>
+<p>When somebody comments on a GitHub issue you're subscribed to (or
+@mentioned in), GitHub emails you from <code>reply+&lt;TOKEN&gt;@reply.github.com</code>.
+Replies to that address are posted back to the same thread as a comment.
+<strong>nobox is just glue around that mechanism</strong>: the human uses their normal
+email client; the agent uses the GitHub REST API; nobox stays on the
+agent side.</p>
+<h2 id="the-token-isnt-opaque">The token isn't opaque<a class="headerlink" href="#the-token-isnt-opaque" title="Permanent link">¶</a></h2>
+<blockquote>
+<p><strong>⚠ Never share a <code>reply+&lt;TOKEN&gt;@reply.github.com</code> address with anyone.
+Each token is effectively a scoped bearer credential - it lets whoever
+holds it post a comment <em>as you</em>, on that specific issue, simply by
+SMTPing a reply. The MAC stops forgery, but if the token itself leaks
+(forwarded email, screenshot, paste into a chat), the holder can
+impersonate you on that thread. The only way to revoke an outstanding
+reply token is to change your GitHub password - that rotates the keying
+material and invalidates every still-live token at once.</strong></p>
+</blockquote>
+<p><code>&lt;TOKEN&gt;</code> is a structured binary blob - base32-encoded without padding,
+26 - 30 bytes on the wire. (The old hex variant was twice as long and was
+compressed to base32 around 2022.)</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uid(4) || mac(10) || thread_id(4) || msgpack([kind, subject_id])
+</code></pre></div>
+<h3 id="uid-4-bytes-big-endian-uint32-in-the-clear"><code>uid</code> - 4 bytes, big-endian uint32, <strong>in the clear</strong><a class="headerlink" href="#uid-4-bytes-big-endian-uint32-in-the-clear" title="Permanent link">¶</a></h3>
+<p>Recipient's GitHub user ID. The first 7 base32 chars of any token
+directly identify the recipient - no API call needed. Leaked notification
+emails are therefore trivially attributable to a specific GitHub user via
+<code>github.com/&lt;username&gt;.png</code> reverse-mapping.</p>
+<h3 id="mac-10-bytes-80-bit-authenticator"><code>mac</code> - 10 bytes / 80-bit authenticator<a class="headerlink" href="#mac-10-bytes-80-bit-authenticator" title="Permanent link">¶</a></h3>
+<p>Empirically depends on <code>uid</code>, <code>thread_id</code>, and almost certainly the
+<code>(kind, subject_id)</code> tuple as well. Different recipients of the same
+notification get different MACs; different notifications for the same
+subject get different MACs. No field can be mutated without invalidating
+it.</p>
+<p><strong>The keying material rotates on GitHub password reset.</strong> Old reply
+tokens stop working once you change your password - that's the only
+externally-visible revocation path.</p>
+<h3 id="thread_id-4-bytes-big-endian-uint32"><code>thread_id</code> - 4 bytes, big-endian uint32<a class="headerlink" href="#thread_id-4-bytes-big-endian-uint32" title="Permanent link">¶</a></h3>
+<p>A global notification-delivery counter. Shared across all recipients of
+one notification event, unique per delivery (same user receiving two
+notifications about the same subject gets two different <code>thread_id</code>s).</p>
+<p>Currently in the 1.78B range and growing ~1B every six months. GitHub
+will need to migrate the field before it hits 2^32 in roughly two years.</p>
+<h3 id="msgpack-tail-2-element-array-kind-subject_id"><code>msgpack</code> tail - 2-element array <code>[kind, subject_id]</code><a class="headerlink" href="#msgpack-tail-2-element-array-kind-subject_id" title="Permanent link">¶</a></h3>
+<p><code>kind</code> is a single ASCII char identifying the subject type:</p>
+<table>
+<thead>
+<tr>
+<th>Char</th>
+<th>Subject type</th>
+<th>Confirmed in the wild?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>'i'</code></td>
+<td>Issue</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>'g'</code></td>
+<td>Gist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>'p'</code></td>
+<td>Pull request</td>
+<td>Inferred</td>
+</tr>
+<tr>
+<td><code>'c'</code></td>
+<td>Commit comment</td>
+<td>Inferred</td>
+</tr>
+<tr>
+<td><code>'d'</code></td>
+<td>Discussion</td>
+<td>Inferred</td>
+</tr>
+<tr>
+<td><code>'r'</code></td>
+<td>Release</td>
+<td>Inferred</td>
+</tr>
+</tbody>
+</table>
+<p><code>subject_id</code> is GitHub's global database ID for the subject (not the
+per-repo <code>#N</code>) - encoded with msgpack's int-tag autosizing:
+<code>ce</code> + 4 bytes for <code>uint32</code> (below 2^32), <code>cf</code> + 8 bytes for <code>uint64</code>
+above.</p>
+<p><strong>The token has no repo field.</strong> GitHub recovers the repo server-side by
+joining on <code>subject_id</code>. Externally you can do the same via GraphQL
+<code>node(id: "MDU6SXNzdWU&lt;base64-encoded-N&gt;")</code>.</p>
+<h2 id="legacy-hex-variant">Legacy hex variant<a class="headerlink" href="#legacy-hex-variant" title="Permanent link">¶</a></h2>
+<p>A pre-base32 hex-encoded variant predates the cutover around 2022:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uid(4) || mac(20) || msgpack([thread_id_u64, [kind, subject_id]])
+</code></pre></div>
+<p>Same fields, but <strong>longer MAC</strong> (160 bits), <code>thread_id</code> as a <code>uint64</code>
+inside the msgpack instead of in its own slot, wrapped in hex on the wire
+(60+ chars). GitHub's <code>metroplex</code> daemon still accepts both formats, so
+archived notification emails from before the cutover remain valid until
+the recipient's next password reset.</p>
+<h2 id="smtp-layer-behaviour">SMTP-layer behaviour<a class="headerlink" href="#smtp-layer-behaviour" title="Permanent link">¶</a></h2>
+<p>At the SMTP layer there's effectively <strong>no validation</strong>. The six
+round-robin MX hosts (<code>in-{5..10}.smtp.github.com</code>, on a shared cert with
+<code>*.smtp.ghe.com</code> covering Enterprise Cloud) accept anything syntactically
+valid:</p>
+<ul>
+<li>Any recipient (<code>reply+&lt;anything&gt;@reply.github.com</code>).</li>
+<li>Any sender.</li>
+<li>Any token mutation.</li>
+<li>Even arbitrary local-part prefixes (<code>notifications+</code>, <code>noreply+</code>,
+  <code>postmaster</code>, ...).</li>
+</ul>
+<p>All real token validation happens <strong>post-DATA inside metroplex</strong>, which
+means:</p>
+<ul>
+<li><strong>No liveness oracle</strong> via SMTP probing - you cannot distinguish a
+  valid token from an invalid one at the protocol level.</li>
+<li><strong>The MAC is the only thing stopping forgery.</strong></li>
+<li><code>uid</code> being plaintext in the prefix means leaked notification emails
+  are directly attributable to specific users without any GitHub API
+  call.</li>
+</ul>
+<h2 id="why-nobox-doesnt-decode-any-of-this">Why nobox doesn't decode any of this<a class="headerlink" href="#why-nobox-doesnt-decode-any-of-this" title="Permanent link">¶</a></h2>
+<p>nobox itself does not decode the token. It only needs the GitHub REST
+API on the agent side and the user's regular reply-to-email behaviour on
+the human side. The token research is <em>why we know this works</em> - it
+proves the design isn't fragile and isn't relying on undocumented
+internals being friendly. The reply pipeline has been stable since 2011
+(the year the feature shipped), with the only externally visible change
+being the hex→base32 cutover.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © Simone Margaritelli &amp; Alessandro Coccia, released under the MIT License
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/evilsocket/nobox" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://x.com/evilsocket" target="_blank" rel="noopener" title="x.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M357.2 48h70.6L273.6 224.2 455 464H313L201.7 318.6 74.5 464H3.8l164.9-188.5L-5.2 48h145.6l100.5 132.9zm-24.8 373.8h39.1L119.1 88h-42z"></path></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>
