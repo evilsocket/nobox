@@ -41,88 +41,11 @@ nobox install-skill
 
 ## How it works
 
-A [friend](https://github.com/zangarmarsh) and I were talking about how to
-give an AI agent a *public* email inbox without standing up an MTA,
-registering a domain, or paying for one of the hosted services. The
-sticking point was the MTA itself — there's no nice, free way to get an
-internet-facing email address you can hand to an agent. Alessandro pointed
-out the GitHub notification system: every comment notification arrives from
-a `reply+<base32>@reply.github.com` address, and replies to that address
-are posted back as issue comments. We spent the night reverse-engineering
-what the base32 token carries and how GitHub validates it. **nobox is the
-result.**
-
-When somebody comments on a GitHub issue you're subscribed to (or
-@mentioned in), GitHub emails you from `reply+<TOKEN>@reply.github.com`.
-Replies to that address are posted back to the same thread as a comment.
-nobox is just glue around that: the human uses their normal email client,
-the agent uses the GitHub REST API, nobox stays on the agent side.
-
-The token isn't opaque. It's a structured binary blob — base32-encoded
-without padding, 26–30 bytes on the wire (the old hex variant was twice as
-long, compressed to base32 around 2022):
-
-```
-uid(4) || mac(10) || thread_id(4) || msgpack([kind, subject_id])
-```
-
-- **`uid`** — recipient's GitHub user ID as a big-endian uint32, in the
-  clear. The first 7 base32 chars of any token directly identify the
-  recipient — no API call needed. Leaked notification emails are therefore
-  trivially attributable to a specific GitHub user.
-- **`mac`** — 80-bit authenticator that empirically depends on `uid`,
-  `thread_id`, and almost certainly the `(kind, subject_id)` tuple too. No
-  field can be mutated without invalidating it. The keying material rotates
-  on password reset, which is why old reply tokens stop working once you
-  change your password.
-- **`thread_id`** — big-endian uint32, a global notification-delivery
-  counter shared across all recipients of one notification event but unique
-  per delivery. Currently in the 1.78B range, growing ~1B every six months,
-  which means GitHub has to migrate the field before it hits 2³² in roughly
-  two years.
-- **`msgpack` tail** — a 2-element array `[kind, subject_id]`. `kind` is a
-  single ASCII char (`'i'` issue and `'g'` gist confirmed in the wild;
-  `'p'` / `'c'` / `'d'` / `'r'` inferred for PRs / commit comments /
-  discussions / releases). `subject_id` is GitHub's global database ID for
-  the subject (not the per-repo `#N`), encoded with msgpack's int-tag
-  autosizing (`ce` + 4 bytes for uint32, `cf` + 8 bytes for uint64). The
-  token has no repo field — GitHub recovers the repo server-side by joining
-  on `subject_id`, and externally you can do the same via GraphQL
-  `node(id: "MDU6SXNzdWU…")`.
-
-A legacy hex-encoded variant predates the base32 cutover:
-`uid(4) || mac(20) || msgpack([thread_id_u64, [kind, subject_id]])`. Same
-fields, longer MAC, `thread_id` inside the msgpack as a uint64, hex on the
-wire (60+ chars). GitHub's `metroplex` daemon still accepts both, so
-archived notification emails from before ~2022 remain valid until the
-recipient's next password reset.
-
-At the SMTP layer there's effectively no validation. The six round-robin
-MX hosts (`in-{5..10}.smtp.github.com`, on a shared cert with
-`*.smtp.ghe.com` covering Enterprise Cloud) accept any syntactically valid
-recipient, any sender, any token mutation, and even arbitrary local-part
-prefixes (`notifications+`, `noreply+`, `postmaster`, etc.) with `250 OK`.
-All real token validation happens post-DATA inside metroplex — so SMTP
-probing yields no liveness oracle, and the MAC is the only thing stopping
-forgery.
-
-Open questions: whether metroplex still enforces the From-header →
-verified-email check the 2011 docs described (current docs are silent), and
-whether the kind-char dispatch has a format-confusion bug between the old
-and new token layouts.
-
-nobox itself doesn't decode any of this. It only needs the GitHub REST API
-on the agent side and the user's regular reply-to-email behaviour on the
-human side; the token research is just *why we know this works*.
-
-> **⚠ Never share a `reply+<TOKEN>@reply.github.com` address with anyone.
-> Each token is effectively a scoped bearer credential — it lets whoever
-> holds it post a comment _as you_, on that specific issue, simply by
-> SMTPing a reply. The MAC stops forgery, but if the token itself leaks
-> (forwarded email, screenshot, paste into a chat), the holder can
-> impersonate you on that thread. The only way to revoke an outstanding
-> reply token is to change your GitHub password — that rotates the keying
-> material and invalidates every still-live token at once.**
+See the documentation at <https://nobox.evilsocket.net/> — the
+[How it works](https://nobox.evilsocket.net/how-it-works/) page covers
+the GitHub `reply+<TOKEN>@reply.github.com` token format we
+reverse-engineered, the security implications, and why none of it has
+to be fragile.
 
 ## Surfaces
 
